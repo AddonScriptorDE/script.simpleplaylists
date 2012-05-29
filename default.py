@@ -61,7 +61,7 @@ def addCurrentUrl():
             fh.write(playlistEntry+"\n")
             fh.close()
         else:
-          xbmc.executebuiltin('XBMC.Notification(Info:,No File playing!,5000)')
+          xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
 
 def playListMain():
         playlists=[]

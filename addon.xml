@@ -11,11 +11,11 @@
     <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-      <summary lang="en">Add Files and Streams to playlists and watch them later</summary>
-      <summary lang="de">Dateien und Streams zu Playlisten hinzufügen und später schauen</summary>
+      <summary lang="en">Add local files and online streams to playlists and watch them later</summary>
+      <summary lang="de">Lokale Dateien und Online Streams zu Playlisten hinzufügen und später schauen</summary>
       <language></language>
-      <description lang="en">Add Files and Streams to playlists and watch them later</description>
-      <description lang="de">Dateien und Streams zu Playlisten hinzufügen und später schauen</description>
+      <description lang="en">Add local files and online streams to playlists and watch them later</description>
+      <description lang="de">Lokale Dateien und Online Streams zu Playlisten hinzufügen und später schauen</description>
     <platform>all</platform>
   </extension>
 </addon>
