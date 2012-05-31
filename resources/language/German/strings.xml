@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <strings>
-  <string id="30001">Playlisten anzeigen</string>
-  <string id="30002">Aktuelle URL hinzufügen</string>
   <string id="30003">Lokal</string>
   <string id="30004">Playlist wählen</string>
-  <string id="30005">Keine Datei vorhanden</string>
+  <string id="30005">Keine URL zum hinzufuegen vorhanden</string>
   <string id="30100">Lokale Playlist 01</string>
   <string id="30101">Lokale Playlist 02</string>
   <string id="30102">Lokale Playlist 03</string>

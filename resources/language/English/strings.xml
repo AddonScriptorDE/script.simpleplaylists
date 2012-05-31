@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <strings>
-  <string id="30001">Show Playlists</string>
-  <string id="30002">Add Current URL</string>
   <string id="30003">Local</string>
   <string id="30004">Choose playlist</string>
   <string id="30005">No file playing</string>

@@ -4,7 +4,6 @@ import xbmc, xbmcplugin, xbmcgui, xbmcaddon, locale, sys, urllib, urllib2, re, o
 from operator import itemgetter
 
 pluginhandle=int(sys.argv[1])
-
 addonID = "plugin.video.watch.it.later"
 addon_work_folder=xbmc.translatePath("special://profile/addon_data/"+addonID)
 settings = xbmcaddon.Addon(id=addonID)
@@ -30,38 +29,50 @@ for pl in playlistsTemp:
   if pl!="":
     myOnlinePlaylists.append(pl)
 
-def index():
-        addDir(translation(30001),"",'playListMain',"")
-        addDir(translation(30002),"",'addCurrentUrl',"")
-        xbmcplugin.endOfDirectory(pluginhandle)
-
 def addCurrentUrl():
-        playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-        if playlist.getposition()>=0:
-          title = playlist[playlist.getposition()].getdescription()
-          title = str(datetime.date.today()).replace("-",".") + " - " + title
-          url = playlist[playlist.getposition()].getfilename()
-          if url.find("http://")==0 or url.find("rtmp://")==0 or url.find("rtmpe://")==0 or url.find("rtmps://")==0 or url.find("rtmpt://")==0 or url.find("rtmpte://")==0 or url.find("mms://")==0 or url.find("plugin://")==0:
-            dialog = xbmcgui.Dialog()
-            pl = "Online: "+myOnlinePlaylists[dialog.select(translation(30004), myOnlinePlaylists)]
-          else:
-            dialog = xbmcgui.Dialog()
-            pl = str(translation(30003))+": "+myLocalPlaylists[dialog.select(translation(30004), myLocalPlaylists)]
-          playlistEntry="###TITLE###="+title+"###URL###="+url+"###PLAYLIST###="+pl+"###END###"
-          if os.path.exists(playListFile):
-            fh = open(playListFile, 'r')
-            content=fh.read()
-            fh.close()
-            if content.find(playlistEntry)==-1:
-              fh=open(playListFile, 'a')
-              fh.write(playlistEntry+"\n")
-              fh.close()
-          else:
+        path = xbmc.getInfoLabel('ListItem.Path')
+        filenameAndPath = xbmc.getInfoLabel('ListItem.FileNameAndPath')
+        filename = filenameAndPath.replace(path,"")
+        url = filenameAndPath#path+urllib.quote_plus(filename)
+        title = xbmc.getInfoLabel('Listitem.Label')
+        if url=="":
+          try:
+            playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+            if playlist.getposition()>=0:
+              title = playlist[playlist.getposition()].getdescription()
+              url = playlist[playlist.getposition()].getfilename()
+            else:
+              xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
+          except:
+            try:
+              playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+              if playlist.getposition()>=0:
+                title = playlist[playlist.getposition()].getdescription()
+                url = playlist[playlist.getposition()].getfilename()
+              else:
+                xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
+            except:
+              pass
+        title = str(datetime.date.today()).replace("-",".") + " - " + title
+        if url.find("http://")==0 or url.find("rtmp://")==0 or url.find("rtmpe://")==0 or url.find("rtmps://")==0 or url.find("rtmpt://")==0 or url.find("rtmpte://")==0 or url.find("mms://")==0 or url.find("plugin://")==0:
+          dialog = xbmcgui.Dialog()
+          pl = "Online: "+myOnlinePlaylists[dialog.select(translation(30004), myOnlinePlaylists)]
+        else:
+          dialog = xbmcgui.Dialog()
+          pl = str(translation(30003))+": "+myLocalPlaylists[dialog.select(translation(30004), myLocalPlaylists)]
+        playlistEntry="###TITLE###="+title+"###URL###="+url+"###PLAYLIST###="+pl+"###END###"
+        if os.path.exists(playListFile):
+          fh = open(playListFile, 'r')
+          content=fh.read()
+          fh.close()
+          if content.find(playlistEntry)==-1:
             fh=open(playListFile, 'a')
             fh.write(playlistEntry+"\n")
             fh.close()
         else:
-          xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
+          fh=open(playListFile, 'a')
+          fh.write(playlistEntry+"\n")
+          fh.close()
 
 def playListMain():
         playlists=[]
@@ -149,8 +160,6 @@ if mode == 'addCurrentUrl':
     addCurrentUrl()
 elif mode == 'showAllPlaylists':
     showAllPlaylists()
-elif mode == 'playListMain':
-    playListMain()
 elif mode == 'showPlaylist':
     showPlaylist(url)
 elif mode == 'playVideoFromPlaylist':
@@ -158,4 +167,4 @@ elif mode == 'playVideoFromPlaylist':
 elif mode == 'managePlaylist':
     managePlaylist()
 else:
-    index()
+    playListMain()
