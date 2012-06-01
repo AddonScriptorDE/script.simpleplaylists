@@ -1,12 +1,50 @@
 <settings>
-   <setting id="pl0" type="text" label="30100" default="Series" />
-   <setting id="pl1" type="text" label="30101" default="Movies" />
-   <setting id="pl2" type="text" label="30102" default="Docus" />
-   <setting id="pl3" type="text" label="30103" default="" />
-   <setting id="pl4" type="text" label="30104" default="" />
-   <setting id="pl5" type="text" label="30105" default="Interesting" />
-   <setting id="pl6" type="text" label="30106" default="" />
-   <setting id="pl7" type="text" label="30107" default="" />
-   <setting id="pl8" type="text" label="30108" default="" />
-   <setting id="pl9" type="text" label="30109" default="" />
+   <category label="30006">
+     <setting id="useAlternatePlDir" type="bool" label="30009" default="false" />
+     <setting id="alternatePlDir" type="text" label="30010" default="" />
+   </category>
+   <category label="30007">
+     <setting id="pl_offline_0" type="text" label="30100" default="Series" />
+     <setting id="pl_offline_1" type="text" label="30101" default="Movies" />
+     <setting id="pl_offline_2" type="text" label="30102" default="Docus" />
+     <setting id="pl_offline_3" type="text" label="30103" default="" />
+     <setting id="pl_offline_4" type="text" label="30104" default="" />
+     <setting id="pl_offline_5" type="text" label="30105" default="" />
+     <setting id="pl_offline_6" type="text" label="30106" default="" />
+     <setting id="pl_offline_7" type="text" label="30107" default="" />
+     <setting id="pl_offline_8" type="text" label="30108" default="" />
+     <setting id="pl_offline_9" type="text" label="30109" default="" />
+     <setting id="pl_offline_10" type="text" label="30110" default="" />
+     <setting id="pl_offline_11" type="text" label="30111" default="" />
+     <setting id="pl_offline_12" type="text" label="30112" default="" />
+     <setting id="pl_offline_13" type="text" label="30113" default="" />
+     <setting id="pl_offline_14" type="text" label="30114" default="" />
+     <setting id="pl_offline_15" type="text" label="30115" default="" />
+     <setting id="pl_offline_16" type="text" label="30116" default="" />
+     <setting id="pl_offline_17" type="text" label="30117" default="" />
+     <setting id="pl_offline_18" type="text" label="30118" default="" />
+     <setting id="pl_offline_19" type="text" label="30119" default="" />
+   </category>
+   <category label="30008">
+     <setting id="pl_online_0" type="text" label="30150" default="Interesting" />
+     <setting id="pl_online_1" type="text" label="30151" default="" />
+     <setting id="pl_online_2" type="text" label="30152" default="" />
+     <setting id="pl_online_3" type="text" label="30153" default="" />
+     <setting id="pl_online_4" type="text" label="30154" default="" />
+     <setting id="pl_online_5" type="text" label="30155" default="" />
+     <setting id="pl_online_6" type="text" label="30156" default="" />
+     <setting id="pl_online_7" type="text" label="30157" default="" />
+     <setting id="pl_online_8" type="text" label="30158" default="" />
+     <setting id="pl_online_9" type="text" label="30159" default="" />
+     <setting id="pl_online_10" type="text" label="30160" default="" />
+     <setting id="pl_online_11" type="text" label="30161" default="" />
+     <setting id="pl_online_12" type="text" label="30162" default="" />
+     <setting id="pl_online_13" type="text" label="30163" default="" />
+     <setting id="pl_online_14" type="text" label="30164" default="" />
+     <setting id="pl_online_15" type="text" label="30165" default="" />
+     <setting id="pl_online_16" type="text" label="30166" default="" />
+     <setting id="pl_online_17" type="text" label="30167" default="" />
+     <setting id="pl_online_18" type="text" label="30168" default="" />
+     <setting id="pl_online_19" type="text" label="30169" default="" />
+   </category>
 </settings>

@@ -12,18 +12,23 @@ translation = settings.getLocalizedString
 if not os.path.isdir(addon_work_folder):
   os.mkdir(addon_work_folder)
 
-playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/playlist")
+useAlternatePlaylistPath=settings.getSetting("useAlternatePlDir")
+
+if useAlternatePlaylistPath=="true":
+  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/playlist")
+else:
+  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/playlist")
 
 playlistsTemp=[]
-for i in range(0,4,1):
-  playlistsTemp.append(settings.getSetting("pl"+str(i)))
+for i in range(0,19,1):
+  playlistsTemp.append(settings.getSetting("pl_offline_"+str(i)))
 myLocalPlaylists=[]
 for pl in playlistsTemp:
   if pl!="":
     myLocalPlaylists.append(pl)
 playlistsTemp=[]
-for i in range(5,9,1):
-  playlistsTemp.append(settings.getSetting("pl"+str(i)))
+for i in range(0,19,1):
+  playlistsTemp.append(settings.getSetting("pl_online_"+str(i)))
 myOnlinePlaylists=[]
 for pl in playlistsTemp:
   if pl!="":
@@ -111,14 +116,6 @@ def showPlaylist(playlist):
 def playVideoFromPlaylist(url):
         listitem = xbmcgui.ListItem(path=urllib.unquote_plus(url))
         return xbmcplugin.setResolvedUrl(pluginhandle, True, listitem)
-
-def getUrl(url):
-        req = urllib2.Request(url)
-        req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:11.0) Gecko/20100101 Firefox/11.0')
-        response = urllib2.urlopen(req,timeout=30)
-        link=response.read()
-        response.close()
-        return link
 
 def parameters_string_to_dict(parameters):
         ''' Convert parameters encoded in a URL to a dict. '''
