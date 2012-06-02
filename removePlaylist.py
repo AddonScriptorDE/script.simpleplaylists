@@ -11,12 +11,13 @@ if useAlternatePlaylistPath=="true":
 else:
   myPlaylist=xbmc.translatePath("special://profile/addon_data/"+addonID+".playlist")
 
-playlistEntry=urllib.unquote_plus(sys.argv[1])
+playlistToRemove=urllib.unquote_plus(sys.argv[1])
+
 newContent=""
 fh = open(myPlaylist, 'r')
 for line in fh:
-  if line.find(playlistEntry)==-1:
-     newContent+=line
+  if line.find(playlistToRemove)==-1:
+      newContent+=line
 fh.close()
 fh=open(myPlaylist, 'w')
 fh.write(newContent)

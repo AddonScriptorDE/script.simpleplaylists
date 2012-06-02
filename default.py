@@ -13,11 +13,12 @@ if not os.path.isdir(addon_work_folder):
   os.mkdir(addon_work_folder)
 
 useAlternatePlaylistPath=settings.getSetting("useAlternatePlDir")
+showKeyboard=settings.getSetting("showKeyboard")
 
 if useAlternatePlaylistPath=="true":
-  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/playlist")
+  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/"+addonID+".playlist")
 else:
-  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/playlist")
+  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+".playlist")
 
 playlistsTemp=[]
 for i in range(0,19,1):
@@ -58,28 +59,37 @@ def addCurrentUrl():
                 xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
             except:
               pass
-        title = str(datetime.date.today()).replace("-",".") + " - " + title
-        if url.find("http://")==0 or url.find("rtmp://")==0 or url.find("rtmpe://")==0 or url.find("rtmps://")==0 or url.find("rtmpt://")==0 or url.find("rtmpte://")==0 or url.find("mms://")==0 or url.find("plugin://")==0:
-          dialog = xbmcgui.Dialog()
-          pl = "Online: "+myOnlinePlaylists[dialog.select(translation(30004), myOnlinePlaylists)]
-        else:
-          dialog = xbmcgui.Dialog()
-          pl = str(translation(30003))+": "+myLocalPlaylists[dialog.select(translation(30004), myLocalPlaylists)]
-        playlistEntry="###TITLE###="+title+"###URL###="+url+"###PLAYLIST###="+pl+"###END###"
-        if os.path.exists(playListFile):
-          fh = open(playListFile, 'r')
-          content=fh.read()
-          fh.close()
-          if content.find(playlistEntry)==-1:
+        if url!="":
+          if title.find("////")>=0:
+            title = title[:title.find("////")]
+          if showKeyboard=="true":
+            kb = xbmc.Keyboard(title, "Title")
+            kb.doModal()
+            if kb.isConfirmed():
+              title = kb.getText()
+          title = str(datetime.date.today()) + ":::" + title
+          if url.find("http://")==0 or url.find("rtmp://")==0 or url.find("rtmpe://")==0 or url.find("rtmps://")==0 or url.find("rtmpt://")==0 or url.find("rtmpte://")==0 or url.find("mms://")==0 or url.find("plugin://")==0:
+            dialog = xbmcgui.Dialog()
+            pl = "Online: "+myOnlinePlaylists[dialog.select(translation(30004), myOnlinePlaylists)]
+          else:
+            dialog = xbmcgui.Dialog()
+            pl = str(translation(30003))+": "+myLocalPlaylists[dialog.select(translation(30004), myLocalPlaylists)]
+          playlistEntry="###TITLE###="+title+"###URL###="+url+"###PLAYLIST###="+pl+"###END###"
+          if os.path.exists(playListFile):
+            fh = open(playListFile, 'r')
+            content=fh.read()
+            fh.close()
+            if content.find(playlistEntry)==-1:
+              fh=open(playListFile, 'a')
+              fh.write(playlistEntry+"\n")
+              fh.close()
+          else:
             fh=open(playListFile, 'a')
             fh.write(playlistEntry+"\n")
             fh.close()
-        else:
-          fh=open(playListFile, 'a')
-          fh.write(playlistEntry+"\n")
-          fh.close()
 
 def playListMain():
+        xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_LABEL)
         playlists=[]
         if os.path.exists(playListFile):
           fh = open(playListFile, 'r')
@@ -103,14 +113,15 @@ def showPlaylist(playlist):
           url=line[line.find("###URL###=")+10:]
           url=url[:url.find("###PLAYLIST###")]
           title=line[line.find("###TITLE###=")+12:]
-          title=title[:title.find("###URL###")]
+          date=title[:title.find(":::")]
+          title=title[title.find(":::")+3:title.find("###URL###")]
           if pl==playlist:
-            entry=[title,urllib.quote_plus(url)]
+            entry=[title,url,date]
             allEntrys.append(entry)
         fh.close()
-        allEntrys=sorted(allEntrys, key=itemgetter(0), reverse=True)
+        allEntrys=sorted(allEntrys, key=itemgetter(2), reverse=True)
         for entry in allEntrys:
-          addRemovableLink(entry[0],entry[1],'playVideoFromPlaylist',"",pl)
+          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",pl)
         xbmcplugin.endOfDirectory(pluginhandle)
 
 def playVideoFromPlaylist(url):
@@ -128,15 +139,13 @@ def parameters_string_to_dict(parameters):
                     paramDict[paramSplits[0]] = paramSplits[1]
         return paramDict
 
-def addRemovableLink(name,url,mode,iconimage,playlist):
-        u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)
+def addLink(name,url,mode,iconimage,playlist):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
         liz.setProperty('IsPlayable', 'true')
-        playlistEntry="###TITLE###="+name+"###URL###="+urllib.unquote_plus(url)+"###PLAYLIST###="+playlist+"###END###"
-        liz.addContextMenuItems([('Remove from Playlist', 'XBMC.RunScript(special://home/addons/'+addonID+'/removeFromPlaylist.py,'+urllib.quote_plus(playlistEntry)+')',)])
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz)
+        liz.addContextMenuItems([('Remove from Playlist', 'XBMC.RunScript(special://home/addons/'+addonID+'/removeFromPlaylist.py,'+urllib.quote_plus(name)+')')])
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
         return ok
 
 def addDir(name,url,mode,iconimage):
@@ -144,6 +153,7 @@ def addDir(name,url,mode,iconimage):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
+        liz.addContextMenuItems([('Remove Playlist', 'XBMC.RunScript(special://home/addons/'+addonID+'/removePlaylist.py,'+urllib.quote_plus(name)+')'),('Remove All Playlists', 'XBMC.RunScript(special://home/addons/'+addonID+'/removeAllPlaylists.py)')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
         return ok
 

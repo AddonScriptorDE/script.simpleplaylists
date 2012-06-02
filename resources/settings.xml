@@ -1,5 +1,6 @@
 <settings>
    <category label="30006">
+     <setting id="showKeyboard" type="bool" label="30011" default="false" />
      <setting id="useAlternatePlDir" type="bool" label="30009" default="false" />
      <setting id="alternatePlDir" type="text" label="30010" default="" />
    </category>
@@ -7,7 +8,7 @@
      <setting id="pl_offline_0" type="text" label="30100" default="Series" />
      <setting id="pl_offline_1" type="text" label="30101" default="Movies" />
      <setting id="pl_offline_2" type="text" label="30102" default="Docus" />
-     <setting id="pl_offline_3" type="text" label="30103" default="" />
+     <setting id="pl_offline_3" type="text" label="30103" default="Music" />
      <setting id="pl_offline_4" type="text" label="30104" default="" />
      <setting id="pl_offline_5" type="text" label="30105" default="" />
      <setting id="pl_offline_6" type="text" label="30106" default="" />
