@@ -18,7 +18,7 @@ showKeyboard=settings.getSetting("showKeyboard")
 if useAlternatePlaylistPath=="true":
   playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/"+addonID+".playlist")
 else:
-  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+".playlist")
+  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/"+addonID+".playlist")
 
 playlistsTemp=[]
 for i in range(0,19,1):
@@ -67,7 +67,9 @@ def addCurrentUrl():
             kb.doModal()
             if kb.isConfirmed():
               title = kb.getText()
-          title = str(datetime.date.today()) + ":::" + title
+          date=str(datetime.datetime.now())
+          date=date[:date.find(".")]
+          title =  date + ":::" + title
           if url.find("http://")==0 or url.find("rtmp://")==0 or url.find("rtmpe://")==0 or url.find("rtmps://")==0 or url.find("rtmpt://")==0 or url.find("rtmpte://")==0 or url.find("mms://")==0 or url.find("plugin://")==0:
             dialog = xbmcgui.Dialog()
             pl = "Online: "+myOnlinePlaylists[dialog.select(translation(30004), myOnlinePlaylists)]
@@ -113,7 +115,7 @@ def showPlaylist(playlist):
           url=line[line.find("###URL###=")+10:]
           url=url[:url.find("###PLAYLIST###")]
           title=line[line.find("###TITLE###=")+12:]
-          date=title[:title.find(":::")]
+          date=translation(30012)+": "+title[:title.find(":::")]
           title=title[title.find(":::")+3:title.find("###URL###")]
           if pl==playlist:
             entry=[title,url,date]
@@ -121,7 +123,7 @@ def showPlaylist(playlist):
         fh.close()
         allEntrys=sorted(allEntrys, key=itemgetter(2), reverse=True)
         for entry in allEntrys:
-          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",pl)
+          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",entry[2])
         xbmcplugin.endOfDirectory(pluginhandle)
 
 def playVideoFromPlaylist(url):
@@ -139,12 +141,12 @@ def parameters_string_to_dict(parameters):
                     paramDict[paramSplits[0]] = paramSplits[1]
         return paramDict
 
-def addLink(name,url,mode,iconimage,playlist):
+def addLink(name,url,mode,iconimage,plot):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
-        liz.setInfo( type="Video", infoLabels={ "Title": name } )
+        liz.setInfo( type="Video", infoLabels={ "Title": name, "plot": plot } )
         liz.setProperty('IsPlayable', 'true')
-        liz.addContextMenuItems([('Remove from Playlist', 'XBMC.RunScript(special://home/addons/'+addonID+'/removeFromPlaylist.py,'+urllib.quote_plus(name)+')')])
+        liz.addContextMenuItems([(translation(30013), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removeFromPlaylist:::'+urllib.quote_plus(name)+')')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
         return ok
 
@@ -153,7 +155,7 @@ def addDir(name,url,mode,iconimage):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
-        liz.addContextMenuItems([('Remove Playlist', 'XBMC.RunScript(special://home/addons/'+addonID+'/removePlaylist.py,'+urllib.quote_plus(name)+')'),('Remove All Playlists', 'XBMC.RunScript(special://home/addons/'+addonID+'/removeAllPlaylists.py)')])
+        liz.addContextMenuItems([(translation(30014), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removePlaylist:::'+urllib.quote_plus(name)+')'),(translation(30015), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removeAllPlaylists:::ALL)')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
         return ok
 
@@ -171,7 +173,5 @@ elif mode == 'showPlaylist':
     showPlaylist(url)
 elif mode == 'playVideoFromPlaylist':
     playVideoFromPlaylist(url)
-elif mode == 'managePlaylist':
-    managePlaylist()
 else:
     playListMain()

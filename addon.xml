@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.watch.it.later"
-       name="WatchItLater"
-       version="1.0.3"
+       name="SimplePlaylists"
+       version="1.0.4"
        provider-name="AddonScriptorDE">
   <requires>
     <import addon="xbmc.python" version="2.0"/>
@@ -11,11 +11,11 @@
     <provides>video audio</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-      <summary lang="en">Add local files and online streams to playlists to watch them later. To use this addon you have to map the following command to a key: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". More Info: forum.xbmc.org</summary>
-      <summary lang="de">Lokale Dateien und Online Streams zu Playlisten hinzufügen um sie später zu schauen. Um das Addon nutzen zu können muss folgender Befehl einer Taste zugewiesen werden: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". Mehr Infos: xbmcnerds.com, forum.xbmc.org</summary>
+      <summary lang="en">Add local files and online streams to playlists while browsing/watching your media. To use this addon you have to map the following command to a key: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". More Info: forum.xbmc.org</summary>
+      <summary lang="de">Lokale Medien und Online Streams beim Durchsuchen/Abspielen zu Playlisten hinzufügen. Um das Addon nutzen zu können muss folgender Befehl einer Taste zugewiesen werden: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". Mehr Infos: xbmcnerds.com, forum.xbmc.org</summary>
       <language></language>
-      <description lang="en">Add local files and online streams to playlists to watch them later. To use this addon you have to map the following command to a key: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". More Info: forum.xbmc.org</description>
-      <description lang="de">Lokale Dateien und Online Streams zu Playlisten hinzufügen um sie später zu schauen. Um das Addon nutzen zu können muss folgender Befehl einer Taste zugewiesen werden: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". Mehr Infos: xbmcnerds.com, forum.xbmc.org</description>
+      <description lang="en">Add local files and online streams to playlists while browsing/watching your media. To use this addon you have to map the following command to a key: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". More Info: forum.xbmc.org</description>
+      <description lang="de">Lokale Medien und Online Streams beim Durchsuchen/Abspielen zu Playlisten hinzufügen. Um das Addon nutzen zu können muss folgender Befehl einer Taste zugewiesen werden: "RunPlugin(plugin://plugin.video.watch.it.later/?mode=addCurrentUrl)". Mehr Infos: xbmcnerds.com, forum.xbmc.org</description>
     <platform>all</platform>
   </extension>
 </addon>

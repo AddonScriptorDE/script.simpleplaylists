@@ -6,9 +6,13 @@
   <string id="30006">Allgemein</string>
   <string id="30007">Lokale Playlisten</string>
   <string id="30008">Online Playlisten</string>
-  <string id="30009">Alternatives Playlist Verzeichnis verwenden?</string>
+  <string id="30009">Alternatives Playlist Verzeichnis verwenden</string>
   <string id="30010">Playlist Verzeichnis</string>
   <string id="30011">Keyboard zum Ändern des Titels einblenden</string>
+  <string id="30012">Hinzugefügt am</string>
+  <string id="30013">Aus Playlist entfernen</string>
+  <string id="30014">Playlist löschen</string>
+  <string id="30015">Alle Playlisten löschen</string>
   <string id="30100">Lokale Playlist 01</string>
   <string id="30101">Lokale Playlist 02</string>
   <string id="30102">Lokale Playlist 03</string>
