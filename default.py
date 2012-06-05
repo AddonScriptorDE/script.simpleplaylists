@@ -18,13 +18,13 @@ elif cat=="addons://sources/audio/":
 elif cat=="addons://sources/image/":
   cat="Image"
 
+if not os.path.isdir(addon_work_folder):
+  os.mkdir(addon_work_folder)
+
 if cat=="Video" or cat=="Audio" or cat=="Image":
   fh=open(catFile, 'w')
   fh.write(cat)
   fh.close()
-
-if not os.path.isdir(addon_work_folder):
-  os.mkdir(addon_work_folder)
 
 useAlternatePlaylistPath=settings.getSetting("useAlternatePlDir")
 showKeyboard=settings.getSetting("showKeyboard")
@@ -76,6 +76,52 @@ def addCurrentUrl():
             except:
               pass
         if url!="":
+          fanart=""
+          plot=""
+          genre=""
+          year=""
+          runtime=""
+          json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties": ["file", "fanart", "genre", "year", "runtime", "plot"]}, "id": 1}' )
+          if json_result.find('"fanart":')>=0:
+            spl=json_result.split('"fanart":')
+            for i in range(1,len(spl),1):
+                entry=spl[i]
+                match=re.compile('"(.+?)"', re.DOTALL).findall(entry)
+                fanartNew=match[0]
+                match=re.compile('"file":"(.+?)"', re.DOTALL).findall(entry)
+                urlNew=match[0].replace("\\\\","\\")
+                match=re.compile('"genre":(.+?)"', re.DOTALL).findall(entry)
+                genreNew=match[0].replace("\"","")
+                match=re.compile('"year"(.+?)}', re.DOTALL).findall(entry)
+                yearNew=match[0].replace(":","")
+                match=re.compile('"runtime":(.+?)"', re.DOTALL).findall(entry)
+                runtimeNew=match[0].replace("\"","")
+                match=re.compile('"plot":(.+?)"', re.DOTALL).findall(entry)
+                plotNew=match[0].replace("\"","")
+                if url==urlNew:
+                  fanart=fanartNew
+                  plot=plotNew
+                  genre=genreNew
+                  year=yearNew
+                  runtime=runtimeNew
+          if fanart=="":
+            json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"properties": ["file", "fanart", "showtitle", "plot"]}, "id": 1}' )
+            if json_result.find('"fanart":')>=0:
+              spl=json_result.split('"episodeid":')
+              for i in range(1,len(spl),1):
+                  entry=spl[i]
+                  match=re.compile('"fanart":"(.+?)"', re.DOTALL).findall(entry)
+                  fanartNew=match[0]
+                  match=re.compile('"showtitle":"(.+?)"', re.DOTALL).findall(entry)
+                  showtitleNew=match[0]
+                  match=re.compile('"file":"(.+?)"', re.DOTALL).findall(entry)
+                  urlNew=match[0].replace("\\\\","\\")
+                  match=re.compile('"plot":(.+?)"}', re.DOTALL).findall(entry)
+                  plotNew=match[0].replace("\"","")
+                  if url==urlNew:
+                    fanart=fanartNew
+                    plot=plotNew
+                    title=showtitleNew+" - "+title
           if title.find("////")>=0:
             title = title[:title.find("////")]
           if showKeyboard=="true":
@@ -88,7 +134,9 @@ def addCurrentUrl():
           title =  date + ":::" + title
           dialog = xbmcgui.Dialog()
           pl = myPlaylists[dialog.select(translation(30004), myPlaylists)]
-          playlistEntry="###TITLE###="+title+"###URL###="+url+"###PLAYLIST###="+pl+"###END###"
+          if plot=="":
+            plot=date
+          playlistEntry="###TITLE###="+title+"###URL###="+url+"###FANART###="+fanart+"###PLOT###="+plot+"###GENRE###="+genre+"###YEAR###="+year+"###RUNTIME###="+runtime+"###PLAYLIST###="+pl+"###END###"
           if os.path.exists(playListFile):
             fh = open(playListFile, 'r')
             content=fh.read()
@@ -113,10 +161,13 @@ def playListMain():
             pl=line[line.find("###PLAYLIST###=")+15:]
             pl=pl[:pl.find("###END###")]
             if not pl in playlists:
-              fh = open(catFile, 'r')
-              lastCat=fh.read()
-              fh.close()
-              if pl.find(lastCat)==0:
+              if os.path.exists(catFile):
+                fh = open(catFile, 'r')
+                lastCat=fh.read()
+                fh.close()
+                if pl.find(lastCat)==0:
+                  playlists.append(pl)
+              else:
                 playlists.append(pl)
           fh.close()
           for pl in playlists:
@@ -131,17 +182,27 @@ def showPlaylist(playlist):
           pl=line[line.find("###PLAYLIST###=")+15:]
           pl=pl[:pl.find("###END###")]
           url=line[line.find("###URL###=")+10:]
-          url=url[:url.find("###PLAYLIST###")]
+          url=url[:url.find("###")]
+          fanart=line[line.find("###FANART###=")+13:]
+          fanart=fanart[:fanart.find("###")]
+          plot=line[line.find("###PLOT###=")+11:]
+          plot=plot[:plot.find("###")]
+          genre=line[line.find("###GENRE###=")+12:]
+          genre=genre[:genre.find("###")]
+          year=line[line.find("###YEAR###=")+11:]
+          year=year[:year.find("###")]
+          runtime=line[line.find("###RUNTIME###=")+14:]
+          runtime=runtime[:runtime.find("###")]
           title=line[line.find("###TITLE###=")+12:]
           date=translation(30012)+": "+title[:title.find(":::")]
           title=title[title.find(":::")+3:title.find("###URL###")]
           if pl==playlist:
-            entry=[title,url,date,pl]
+            entry=[title,url,date,pl,fanart,plot,genre,year,runtime]
             allEntrys.append(entry)
         fh.close()
         allEntrys=sorted(allEntrys, key=itemgetter(2), reverse=True)
         for entry in allEntrys:
-          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",entry[2],entry[3])
+          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",entry[5],entry[3],entry[4],entry[6],entry[7],entry[8])
         xbmcplugin.endOfDirectory(pluginhandle)
 
 def playVideoFromPlaylist(url):
@@ -159,14 +220,17 @@ def parameters_string_to_dict(parameters):
                     paramDict[paramSplits[0]] = paramSplits[1]
         return paramDict
 
-def addLink(name,url,mode,iconimage,plot,pl):
+def addLink(name,url,mode,iconimage,plot,pl,fanart,genre,year,runtime):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
         type="Video"
         if pl.find("Image:")==0:
           type="Image"
-        liz.setInfo( type=type, infoLabels={ "Title": name, "plot": plot } )
+        if year!="":
+          year=int(year)
+        liz.setInfo( type=type, infoLabels={ "Title": name, "plot": plot, "genre": genre, "year": year, "duration": runtime } )
         liz.setProperty('IsPlayable', 'true')
+        liz.setProperty('fanart_image', fanart)
         liz.addContextMenuItems([(translation(30013), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removeFromPlaylist:::'+urllib.quote_plus(name)+')')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
         return ok

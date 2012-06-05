@@ -25,4 +25,7 @@
 1.0.5
 - Fixed check for dupes when adding items
 - Added support for images
-- Playlist are now divided in Video/Audio/Image
+- Playlists are now divided in Video/Audio/Image
+
+1.0.6
+- Added support for advanced DB-Infos (Movies and Series)

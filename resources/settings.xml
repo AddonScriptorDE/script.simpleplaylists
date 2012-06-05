@@ -7,7 +7,7 @@
    <category label="30007">
      <setting id="pl_video_0" type="text" label="30100" default="Movies" />
      <setting id="pl_video_1" type="text" label="30101" default="Series" />
-     <setting id="pl_video_2" type="text" label="30102" default="" />
+     <setting id="pl_video_2" type="text" label="30102" default="Online" />
      <setting id="pl_video_3" type="text" label="30103" default="" />
      <setting id="pl_video_4" type="text" label="30104" default="" />
      <setting id="pl_video_5" type="text" label="30105" default="" />
