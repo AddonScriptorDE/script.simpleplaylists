@@ -21,3 +21,8 @@
 - Some small fixes and optical modifications
 - Added Portuguese (Brazil) strings (Thx @ Wanilton)
 - Changed add-on name because of audio support (WatchItLater --> SimplePlaylists)
+
+1.0.5
+- Fixed check for dupes when adding items
+- Added support for images
+- Playlist are now divided in Video/Audio/Image

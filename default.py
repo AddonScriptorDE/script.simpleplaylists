@@ -8,6 +8,20 @@ addonID = "plugin.video.watch.it.later"
 addon_work_folder=xbmc.translatePath("special://profile/addon_data/"+addonID)
 settings = xbmcaddon.Addon(id=addonID)
 translation = settings.getLocalizedString
+cat = xbmc.getInfoLabel('Container.FolderPath')
+catFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/lastContentType")
+
+if cat=="addons://sources/video/":
+  cat="Video"
+elif cat=="addons://sources/audio/":
+  cat="Audio"
+elif cat=="addons://sources/image/":
+  cat="Image"
+
+if cat=="Video" or cat=="Audio" or cat=="Image":
+  fh=open(catFile, 'w')
+  fh.write(cat)
+  fh.close()
 
 if not os.path.isdir(addon_work_folder):
   os.mkdir(addon_work_folder)
@@ -16,30 +30,32 @@ useAlternatePlaylistPath=settings.getSetting("useAlternatePlDir")
 showKeyboard=settings.getSetting("showKeyboard")
 
 if useAlternatePlaylistPath=="true":
-  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/"+addonID+".playlist")
+  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/SimplePlaylists.pl")
 else:
-  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/"+addonID+".playlist")
+  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/SimplePlaylists.pl")
 
+myPlaylists=[]
 playlistsTemp=[]
-for i in range(0,19,1):
-  playlistsTemp.append(settings.getSetting("pl_offline_"+str(i)))
-myLocalPlaylists=[]
+for i in range(0,20,1):
+  playlistsTemp.append(settings.getSetting("pl_video_"+str(i)))
 for pl in playlistsTemp:
   if pl!="":
-    myLocalPlaylists.append(pl)
+    myPlaylists.append("Video: "+pl)
 playlistsTemp=[]
-for i in range(0,19,1):
-  playlistsTemp.append(settings.getSetting("pl_online_"+str(i)))
-myOnlinePlaylists=[]
+for i in range(0,20,1):
+  playlistsTemp.append(settings.getSetting("pl_audio_"+str(i)))
 for pl in playlistsTemp:
   if pl!="":
-    myOnlinePlaylists.append(pl)
+    myPlaylists.append("Audio: "+pl)
+playlistsTemp=[]
+for i in range(0,20,1):
+  playlistsTemp.append(settings.getSetting("pl_image_"+str(i)))
+for pl in playlistsTemp:
+  if pl!="":
+    myPlaylists.append("Image: "+pl)
 
 def addCurrentUrl():
-        path = xbmc.getInfoLabel('ListItem.Path')
-        filenameAndPath = xbmc.getInfoLabel('ListItem.FileNameAndPath')
-        filename = filenameAndPath.replace(path,"")
-        url = filenameAndPath#path+urllib.quote_plus(filename)
+        url = xbmc.getInfoLabel('ListItem.FileNameAndPath')
         title = xbmc.getInfoLabel('Listitem.Label')
         if url=="":
           try:
@@ -70,21 +86,19 @@ def addCurrentUrl():
           date=str(datetime.datetime.now())
           date=date[:date.find(".")]
           title =  date + ":::" + title
-          if url.find("http://")==0 or url.find("rtmp://")==0 or url.find("rtmpe://")==0 or url.find("rtmps://")==0 or url.find("rtmpt://")==0 or url.find("rtmpte://")==0 or url.find("mms://")==0 or url.find("plugin://")==0:
-            dialog = xbmcgui.Dialog()
-            pl = "Online: "+myOnlinePlaylists[dialog.select(translation(30004), myOnlinePlaylists)]
-          else:
-            dialog = xbmcgui.Dialog()
-            pl = str(translation(30003))+": "+myLocalPlaylists[dialog.select(translation(30004), myLocalPlaylists)]
+          dialog = xbmcgui.Dialog()
+          pl = myPlaylists[dialog.select(translation(30004), myPlaylists)]
           playlistEntry="###TITLE###="+title+"###URL###="+url+"###PLAYLIST###="+pl+"###END###"
           if os.path.exists(playListFile):
             fh = open(playListFile, 'r')
             content=fh.read()
             fh.close()
-            if content.find(playlistEntry)==-1:
+            if content.find(playlistEntry[playlistEntry.find(":::"):])==-1:
               fh=open(playListFile, 'a')
               fh.write(playlistEntry+"\n")
               fh.close()
+            else:
+              xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30016))+'!,5000)')
           else:
             fh=open(playListFile, 'a')
             fh.write(playlistEntry+"\n")
@@ -99,10 +113,14 @@ def playListMain():
             pl=line[line.find("###PLAYLIST###=")+15:]
             pl=pl[:pl.find("###END###")]
             if not pl in playlists:
-              playlists.append(pl)
+              fh = open(catFile, 'r')
+              lastCat=fh.read()
+              fh.close()
+              if pl.find(lastCat)==0:
+                playlists.append(pl)
           fh.close()
           for pl in playlists:
-            addDir(pl,pl,'showPlaylist',"")
+            addDir(pl.replace(lastCat+": ",""),pl,'showPlaylist',"")
         xbmcplugin.endOfDirectory(pluginhandle)
 
 def showPlaylist(playlist):
@@ -118,12 +136,12 @@ def showPlaylist(playlist):
           date=translation(30012)+": "+title[:title.find(":::")]
           title=title[title.find(":::")+3:title.find("###URL###")]
           if pl==playlist:
-            entry=[title,url,date]
+            entry=[title,url,date,pl]
             allEntrys.append(entry)
         fh.close()
         allEntrys=sorted(allEntrys, key=itemgetter(2), reverse=True)
         for entry in allEntrys:
-          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",entry[2])
+          addLink(entry[0],entry[1],'playVideoFromPlaylist',"",entry[2],entry[3])
         xbmcplugin.endOfDirectory(pluginhandle)
 
 def playVideoFromPlaylist(url):
@@ -141,10 +159,13 @@ def parameters_string_to_dict(parameters):
                     paramDict[paramSplits[0]] = paramSplits[1]
         return paramDict
 
-def addLink(name,url,mode,iconimage,plot):
+def addLink(name,url,mode,iconimage,plot,pl):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
-        liz.setInfo( type="Video", infoLabels={ "Title": name, "plot": plot } )
+        type="Video"
+        if pl.find("Image:")==0:
+          type="Image"
+        liz.setInfo( type=type, infoLabels={ "Title": name, "plot": plot } )
         liz.setProperty('IsPlayable', 'true')
         liz.addContextMenuItems([(translation(30013), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removeFromPlaylist:::'+urllib.quote_plus(name)+')')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)

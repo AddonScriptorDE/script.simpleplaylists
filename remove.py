@@ -7,9 +7,9 @@ settings = xbmcaddon.Addon(id=addonID)
 useAlternatePlaylistPath=settings.getSetting("useAlternatePlDir")
 
 if useAlternatePlaylistPath=="true":
-  myPlaylist=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/"+addonID+".playlist")
+  myPlaylist=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/SimplePlaylists.pl")
 else:
-  myPlaylist=xbmc.translatePath("special://profile/addon_data/"+addonID+"/"+addonID+".playlist")
+  myPlaylist=xbmc.translatePath("special://profile/addon_data/"+addonID+"/SimplePlaylists.pl")
 
 spl=urllib.unquote_plus(sys.argv[1]).split(":::")
 mode=spl[0]
