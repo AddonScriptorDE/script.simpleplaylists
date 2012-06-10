@@ -37,6 +37,7 @@
 - Changed type of accessing db infos when adding selected items
 - Changed type of playlist definitions/management
 - Added parameter for content-type overview
+- Added context menu for managing playlists/subfolders
 - Added automatic content detection
 - Added playlist subfolders
 - Fixed bug when removing playlist entries
