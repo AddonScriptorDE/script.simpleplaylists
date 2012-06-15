@@ -10,36 +10,40 @@ addonID = "script.simpleplaylists"
 addon_work_folder=xbmc.translatePath("special://profile/addon_data/"+addonID)
 settings = xbmcaddon.Addon(id=addonID)
 translation = settings.getLocalizedString
-contentType = xbmc.getInfoLabel('Container.Property(addoncategory)')
 lastContentTypeFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/lastContentType")
 
-if contentType=="addons://sources/video/":
-  contentType="Video"
-elif contentType=="addons://sources/audio/":
-  contentType="Audio"
-elif contentType=="addons://sources/image/":
-  contentType="Image"
+lastContentType = xbmc.getInfoLabel('Container.FolderPath')
+if lastContentType=="addons://sources/video/":
+  lastContentType="Video"
+  fh=open(lastContentTypeFile, 'w')
+  fh.write(lastContentType)
+  fh.close()
+elif lastContentType=="addons://sources/audio/":
+  lastContentType="Audio"
+  fh=open(lastContentTypeFile, 'w')
+  fh.write(lastContentType)
+  fh.close()
+elif lastContentType=="addons://sources/image/":
+  lastContentType="Image"
+  fh=open(lastContentTypeFile, 'w')
+  fh.write(lastContentType)
+  fh.close()
 
 if not os.path.isdir(addon_work_folder):
   os.mkdir(addon_work_folder)
-
-if contentType=="Video" or contentType=="Audio" or contentType=="Image":
-  fh=open(lastContentTypeFile, 'w')
-  fh.write(contentType)
-  fh.close()
 
 useAlternatePlaylistPath=settings.getSetting("useAlternatePlDir")
 showKeyboard=settings.getSetting("showKeyboard")
 showConfirmation=settings.getSetting("showConfirmation")
 
 if useAlternatePlaylistPath=="true":
-  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/SimplePlaylists.pl")
+  playListFile=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/SimplePlaylists.spl")
   playListNames=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/playlists")
-  playListCats=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/subfolders")
+  playListSubNames=xbmc.translatePath(settings.getSetting("alternatePlDir")+"/subfolders")
 else:
-  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/SimplePlaylists.pl")
+  playListFile=xbmc.translatePath("special://profile/addon_data/"+addonID+"/SimplePlaylists.spl")
   playListNames=xbmc.translatePath("special://profile/addon_data/"+addonID+"/playlists")
-  playListCats=xbmc.translatePath("special://profile/addon_data/"+addonID+"/subfolders")
+  playListSubNames=xbmc.translatePath("special://profile/addon_data/"+addonID+"/subfolders")
 
 myPlaylists=[]
 if os.path.exists(playListNames):
@@ -55,17 +59,63 @@ if os.path.exists(playListNames):
 myPlaylists.append("- "+translation(30017))
 myPlaylists.append("- "+translation(30019))
 
-myPlaylistsCats=[]
-if os.path.exists(playListCats):
-  fh = open(playListCats, 'r')
-  for line in fh:
-    plType=line[:line.find("=")]
-    names=line[line.find("=")+1:]
-    spl=names.split(";")
-    for name in spl:
-      if name!="" and name!="\n":
-        myPlaylistsCats.append(plType+": "+name)
-  fh.close()
+def selectMode():
+        dialog = xbmcgui.Dialog()
+        typeArray = [translation(30022),translation(30032)]
+        nr=dialog.select("SimplePlaylists", typeArray)
+        if nr>=0:
+          type = typeArray[nr]
+          if type==translation(30022):
+            addCurrentUrl()
+          elif type==translation(30032):
+            showPlaylists()
+
+def remove(url):
+        spl=url.split(";;;")
+        mode=spl[0]
+        name=spl[1]
+        pl=spl[2]
+        newContent=""
+        fh = open(playListFile, 'r')
+        for line in fh:
+          if mode=="removePlaylist":
+            if line.find("###PLAYLIST###="+name)==-1:
+               newContent+=line
+          elif mode=="removeFromPlaylist":
+            if line.find(name)>=0 and line.find("###PLAYLIST###="+pl+"###")>=0:
+              pass
+            else:
+              newContent+=line
+          elif mode=="removeAllPlaylists":
+            if line.find("###PLAYLIST###="+name)==-1:
+               newContent+=line
+        fh.close()
+        fh=open(playListFile, 'w')
+        fh.write(newContent)
+        fh.close()
+        xbmc.executebuiltin("Container.Refresh")
+
+def rename(url):
+        spl=url.split(";;;")
+        name=spl[0]
+        pl=spl[1]
+        kb = xbmc.Keyboard(name, translation(30033))
+        kb.doModal()
+        newName=""
+        if kb.isConfirmed():
+          newName = kb.getText()
+        newContent=""
+        fh = open(playListFile, 'r')
+        for line in fh:
+          if line.find("###TITLE###="+name+"###")>=0 and line.find("###PLAYLIST###="+pl+"###")>=0:
+            newContent+=line.replace(name,newName)
+          else:
+            newContent+=line
+        fh.close()
+        fh=open(playListFile, 'w')
+        fh.write(newContent)
+        fh.close()
+        xbmc.executebuiltin("Container.Refresh")
 
 def managePlaylists():
         dialog = xbmcgui.Dialog()
@@ -94,7 +144,7 @@ def managePlaylists():
                     kb.doModal()
                     if kb.isConfirmed():
                       temp = type+"="+kb.getText()
-                      if temp[len(temp)-1:]!=";":
+                      if temp[len(temp)-1:]!=";" and kb.getText()!="":
                         temp+=";"
                       temp+="\n"
                     else:
@@ -107,9 +157,9 @@ def managePlaylists():
             else:
               xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30023))+'!,5000)')
           elif type==translation(30027):
-            if os.path.exists(playListCats):
+            if os.path.exists(playListSubNames):
               pls=[]
-              fh = open(playListCats, 'r')
+              fh = open(playListSubNames, 'r')
               for line in fh:
                 pls.append(line[:line.find("=")])
               fh.close()
@@ -118,7 +168,7 @@ def managePlaylists():
               if nr>=0:
                 fullTemp=""
                 playlistTemp = pls[nr]
-                fh = open(playListCats, 'r')
+                fh = open(playListSubNames, 'r')
                 for line in fh:
                   temp=line
                   if line.find(playlistTemp)==0:
@@ -127,14 +177,14 @@ def managePlaylists():
                     kb.doModal()
                     if kb.isConfirmed():
                       temp = playlistTemp+"="+kb.getText()
-                      if temp[len(temp)-1:]!=";":
+                      if temp[len(temp)-1:]!=";" and kb.getText()!="":
                         temp+=";"
                       temp+="\n"
                     else:
                       temp=line
                   fullTemp+=temp
                 fh.close()
-                fh=open(playListCats, 'w')
+                fh=open(playListSubNames, 'w')
                 fh.write(fullTemp)
                 fh.close()
             else:
@@ -150,22 +200,24 @@ def showPlaylists():
             fh=open(lastContentTypeFile, 'w')
             fh.write("Video")
             fh.close()
-            xbmc.executebuiltin('XBMC.ActivateWindow(10025,plugin://script.simpleplaylists)')
+            xbmc.executebuiltin('XBMC.ActivateWindow(10025,plugin://script.simpleplaylists/?mode=playListMain)')
           elif plType==translation(30002):
             fh=open(lastContentTypeFile, 'w')
             fh.write("Audio")
             fh.close()
-            xbmc.executebuiltin('XBMC.ActivateWindow(10502,plugin://script.simpleplaylists)')
+            xbmc.executebuiltin('XBMC.ActivateWindow(10502,plugin://script.simpleplaylists/?mode=playListMain)')
           elif plType==translation(30003):
             fh=open(lastContentTypeFile, 'w')
             fh.write("Image")
             fh.close()
-            xbmc.executebuiltin('XBMC.ActivateWindow(10002,plugin://script.simpleplaylists)')
+            xbmc.executebuiltin('XBMC.ActivateWindow(10002,plugin://script.simpleplaylists/?mode=playListMain)')
 
 def addCurrentUrl():
         addModePlaying="false"
         url = xbmc.getInfoLabel('ListItem.FileNameAndPath')
-        title = xbmc.getInfoLabel('Listitem.Label')
+        path = xbmc.getInfoLabel('ListItem.Path')
+        title = xbmc.getInfoLabel('ListItem.Title')
+        label = xbmc.getInfoLabel('ListItem.Label')
         plot = xbmc.getInfoLabel('Listitem.Plot')
         genre = xbmc.getInfoLabel('Listitem.Genre')
         year = xbmc.getInfoLabel('Listitem.Year')
@@ -176,76 +228,95 @@ def addCurrentUrl():
         fanart = xbmc.getInfoLabel("Listitem.Property(Fanart_Image)")
         artist = xbmc.getInfoLabel('ListItem.Artist')
         picPath = xbmc.getInfoLabel('ListItem.PicturePath')
-        if tvshowTitle!="":
-          title=tvshowTitle+" - "+title
-        if url=="":
+        isPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)')
+        album = xbmc.getInfoLabel('ListItem.Album')
+        thumb = xbmc.getInfoLabel('ListItem.Thumb')
+        cast = xbmc.getInfoLabel('ListItem.CastAndRole')
+        country = xbmc.getInfoLabel('ListItem.Country')
+        studio = xbmc.getInfoLabel('ListItem.Studio')
+        trailer = xbmc.getInfoLabel('ListItem.Trailer')
+        writer = xbmc.getInfoLabel('ListItem.Writer')
+        isDir=False
+        if isPlayable=="" and fanart=="" and director=="" and picPath=="" and artist=="":
+          isDir=True
+        if isPlayable=="" and url=="" and path!="":
+          isDir=True
+          url=path
+        isAlbum=False
+        if title=="":
+          title=label
+        if artist!="":
+          title = artist+" - "+title
+        if artist!="" and album !="" and url=="":
+          isAlbum=True
+          isDir=True
+        if url=="" and isAlbum==False:
           addModePlaying="true"
-          try:
-            playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-            if playlist.getposition()>=0:
-              title = playlist[playlist.getposition()].getdescription()
-              url = playlist[playlist.getposition()].getfilename()
-            else:
-              xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
-          except:
-            try:
-              playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
-              if playlist.getposition()>=0:
-                title = playlist[playlist.getposition()].getdescription()
-                url = playlist[playlist.getposition()].getfilename()
-              else:
-                xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
-            except:
-              pass
+          if xbmc.Player().isPlayingVideo():
+            title = xbmc.Player().getVideoInfoTag().getTitle()
+            url = xbmc.Player().getVideoInfoTag().getPath()
+          elif xbmc.Player().isPlayingAudio():
+            title = xbmc.Player().getMusicInfoTag().getArtist()+" - "+xbmc.Player().getMusicInfoTag().getTitle()
+            url = xbmc.Player().getMusicInfoTag().getURL()
         if url!="" and addModePlaying=="true":
+          isDir=False
+          thumb=xbmc.getInfoImage('VideoPlayer.Cover')
+          plot = xbmc.getInfoLabel('VideoPlayer.Plot')
+          genre = xbmc.getInfoLabel('VideoPlayer.Genre')
+          year = xbmc.getInfoLabel('VideoPlayer.Year')
+          runtime = xbmc.getInfoLabel('VideoPlayer.Duration')
+          director = xbmc.getInfoLabel('VideoPlayer.Director')
+          rating = xbmc.getInfoLabel('VideoPlayer.Rating')
+          tvshowTitle = xbmc.getInfoLabel('VideoPlayer.TVShowTitle')
+          cast = xbmc.getInfoLabel('VideoPlayer.CastAndRole')
+          country = xbmc.getInfoLabel('VideoPlayer.Country')
+          studio = xbmc.getInfoLabel('VideoPlayer.Studio')
+          trailer = xbmc.getInfoLabel('VideoPlayer.Trailer')
+          writer = xbmc.getInfoLabel('VideoPlayer.Writer')
+          artist = xbmc.getInfoLabel('MusicPlayer.Artist')
           if useJson==True:
-              json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties": ["file", "fanart", "director", "genre", "rating", "year", "runtime", "plot"]}, "id": 1}' )
-              if json_result.find('"director":')>=0:
-                spl=json_result.split('"director":')
+              json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties": ["file", "fanart"]}, "id": 1}' )
+              if json_result.find('"fanart":')>=0:
+                spl=json_result.split('"fanart":')
                 for i in range(1,len(spl),1):
                     entry=spl[i]
                     match=re.compile('"(.+?)"', re.DOTALL).findall(entry)
-                    directorNew=match[0]
+                    fanartNew=match[0]
                     match=re.compile('"file":"(.+?)"', re.DOTALL).findall(entry)
                     urlNew=match[0].replace("\\\\","\\")
-                    match=re.compile('"fanart":(.+?)"', re.DOTALL).findall(entry)
-                    fanartNew=match[0].replace("\"","")
-                    match=re.compile('"genre":(.+?)"', re.DOTALL).findall(entry)
-                    genreNew=match[0].replace("\"","")
-                    match=re.compile('"rating":(.+?)"', re.DOTALL).findall(entry)
-                    ratingNew=match[0].replace("\"","").replace(",","")
-                    match=re.compile('"year"(.+?)}', re.DOTALL).findall(entry)
-                    yearNew=match[0].replace(":","")
-                    match=re.compile('"runtime":(.+?)"', re.DOTALL).findall(entry)
-                    runtimeNew=match[0].replace("\"","")
-                    match=re.compile('"plot":(.+?)"', re.DOTALL).findall(entry)
-                    plotNew=match[0].replace("\"","")
                     if url==urlNew:
                       fanart=fanartNew
-                      plot=plotNew
-                      genre=genreNew
-                      year=yearNew
-                      runtime=runtimeNew
-                      director=directorNew
-                      rating=ratingNew
               if fanart=="":
-                json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"properties": ["file", "fanart", "showtitle", "plot"]}, "id": 1}' )
-                if json_result.find('"fanart":')>=0:
+                json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"properties": ["file", "fanart"]}, "id": 1}' )
+                if json_result.find('"episodeid":')>=0:
                   spl=json_result.split('"episodeid":')
                   for i in range(1,len(spl),1):
                       entry=spl[i]
                       match=re.compile('"fanart":"(.+?)"', re.DOTALL).findall(entry)
                       fanartNew=match[0]
-                      match=re.compile('"showtitle":"(.+?)"', re.DOTALL).findall(entry)
-                      showtitleNew=match[0]
                       match=re.compile('"file":"(.+?)"', re.DOTALL).findall(entry)
                       urlNew=match[0].replace("\\\\","\\")
-                      match=re.compile('"plot":(.+?)"}', re.DOTALL).findall(entry)
-                      plotNew=match[0].replace("\"","")
                       if url==urlNew:
                         fanart=fanartNew
-                        plot=plotNew
-                        title=showtitleNew+" - "+title
+        if isAlbum==True:
+          if useJson==True:
+            json_result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "AudioLibrary.GetAlbums", "params": {"properties": ["artist"]}, "id": 1}' )
+            if json_result.find('"albumid":')>=0:
+              spl=json_result.split('"albumid"')
+              for i in range(1,len(spl),1):
+                  entry=spl[i]
+                  match=re.compile(':(.+?),', re.DOTALL).findall(entry)
+                  albumID=match[0]
+                  match=re.compile('"artist":"(.+?)"', re.DOTALL).findall(entry)
+                  artistNew=match[0].replace("\\\\","\\")
+                  match=re.compile('"label":(.+?)"', re.DOTALL).findall(entry)
+                  albumNew=match[0].replace("\"","")
+                  if artist==artistNew and album==albumNew:
+                    url="musicdb://3/"+albumID
+                    title=artistNew+" - "+title
+        cast=cast.replace("\n","/")
+        if tvshowTitle!="" and title!=tvshowTitle:
+          title=tvshowTitle+" - "+title
         if url!="":
           if title.find("////")>=0:
             title = title[:title.find("////")]
@@ -256,7 +327,6 @@ def addCurrentUrl():
               title = kb.getText()
           date=str(datetime.datetime.now())
           date=date[:date.find(".")]
-          title =  date + ":::" + title
           plType=""
           if director=="" and artist=="" and picPath=="":
             dialog = xbmcgui.Dialog()
@@ -336,12 +406,12 @@ def addCurrentUrl():
                     if kb.isConfirmed():
                       kbText=kb.getText()
                       pl = plForCat+";"+kbText
-                      if os.path.exists(playListCats):
-                        fh = open(playListCats, 'r')
+                      if os.path.exists(playListSubNames):
+                        fh = open(playListSubNames, 'r')
                         content=fh.read()
                         fh.close()
                         if content.find(plForCat)>=0:
-                          fh = open(playListCats, 'r')
+                          fh = open(playListSubNames, 'r')
                           newPl=""
                           for line in fh:
                             newLine=line
@@ -349,48 +419,83 @@ def addCurrentUrl():
                               newLine=line.replace("\n",kbText+";\n")
                             newPl+=newLine
                           fh.close()
-                          fh = open(playListCats, 'w')
+                          fh = open(playListSubNames, 'w')
                           fh.write(newPl)
                           fh.close()
                         else:
-                          fh = open(playListCats, 'a')
+                          fh = open(playListSubNames, 'a')
                           fh.write(plForCat+"="+kbText+";"+"\n")
                           fh.close()
                       else:
-                        fh = open(playListCats, 'w')
+                        fh = open(playListSubNames, 'w')
                         fh.write(plForCat+"="+kbText+";"+"\n")
                         fh.close()
                 else:
                   xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30023))+'!,5000)')
-              elif os.path.exists(playListCats):
+              else:
                 cats=[]
-                fh = open(playListCats, 'r')
-                for line in fh:
-                  if line.find(pl)==0:
-                    temp=line[line.find("=")+1:]
-                    spl=temp.split(";")
-                    for cat in spl:
-                      if cat!="\n":
-                        if not cat in cats:
-                          cats.append(cat)
-                cats.append("- "+translation(30024))
-                fh.close()
-                if len(cats)>1:
+                cats.append(pl.replace(plType+": ",""))
+                if os.path.exists(playListSubNames):
+                  fh = open(playListSubNames, 'r')
+                  for line in fh:
+                    if line.find(pl)==0:
+                      temp=line[line.find("=")+1:]
+                      spl=temp.split(";")
+                      for cat in spl:
+                        if cat!="\n":
+                          if not cat in cats:
+                            cats.append(" - "+cat)
+                  fh.close()
+                cats.append(translation(30019))
+                if len(cats)>2:
                   dialog = xbmcgui.Dialog()
-                  nr=dialog.select(pl.replace(plType+": ",""), cats)
+                  nr=dialog.select(translation(30004), cats)
                   if nr>=0:
-                    if cats[nr]!="- "+translation(30024):
-                      pl = pl+";"+cats[nr]
+                    if cats[nr]==pl.replace(plType+": ",""):
+                      pass
+                    elif cats[nr]==translation(30019):
+                      plForCat = pl
+                      kb = xbmc.Keyboard("", translation(30020))
+                      kb.doModal()
+                      if kb.isConfirmed():
+                        kbText=kb.getText()
+                        pl = plForCat+";"+kbText
+                        if os.path.exists(playListSubNames):
+                          fh = open(playListSubNames, 'r')
+                          content=fh.read()
+                          fh.close()
+                          if content.find(plForCat)>=0:
+                            fh = open(playListSubNames, 'r')
+                            newPl=""
+                            for line in fh:
+                              newLine=line
+                              if line.find(plForCat)==0:
+                                newLine=line.replace("\n",kbText+";\n")
+                              newPl+=newLine
+                            fh.close()
+                            fh = open(playListSubNames, 'w')
+                            fh.write(newPl)
+                            fh.close()
+                          else:
+                            fh = open(playListSubNames, 'a')
+                            fh.write(plForCat+"="+kbText+";"+"\n")
+                            fh.close()
+                        else:
+                          fh = open(playListSubNames, 'w')
+                          fh.write(plForCat+"="+kbText+";"+"\n")
+                          fh.close()
+                    else:
+                      pl = pl+";"+cats[nr][3:]
                   else:
                     pl=""
               pl=str(pl)
-              if pl!="" and pl!="- "+translation(30017) and pl!="- "+translation(30019):
-                playlistEntry="###TITLE###="+title+"###URL###="+url+"###FANART###="+fanart+"###PLOT###="+plot+"###GENRE###="+genre+"###DIRECTOR###="+director+"###RATING###="+rating+"###YEAR###="+year+"###RUNTIME###="+runtime+"###PLAYLIST###="+pl+"###END###"
+              if pl!="" and pl!="- "+translation(30017) and pl!=translation(30019) and pl!="- "+translation(30019):
+                playlistEntry="###TITLE###="+title+"###DATE###="+date+"###URL###="+url+"###FANART###="+fanart+"###ISDIR###="+str(isDir)+"###THUMB###="+thumb+"###PLOT###="+plot+"###GENRE###="+genre+"###DIRECTOR###="+director+"###RATING###="+rating+"###COUNTRY###="+country+"###TRAILER###="+trailer+"###CAST###="+cast+"###STUDIO###="+studio+"###WRITER###="+writer+"###YEAR###="+year+"###RUNTIME###="+runtime+"###PLAYLIST###="+pl+"###END###"
                 if os.path.exists(playListFile):
                   fh = open(playListFile, 'r')
                   content=fh.read()
                   fh.close()
-                  if content.find(playlistEntry[playlistEntry.find(":::"):])==-1:
+                  if content.find(playlistEntry[playlistEntry.find("###URL###="):])==-1:
                     fh=open(playListFile, 'a')
                     fh.write(playlistEntry+"\n")
                     fh.close()
@@ -402,6 +507,8 @@ def addCurrentUrl():
                   fh.close()
                 if showConfirmation=="true":
                   xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30030))+'!,2000)')
+        else:
+          xbmc.executebuiltin('XBMC.Notification(Info:,'+str(translation(30005))+'!,5000)')
 
 def playListMain():
         lastContentType=""
@@ -411,7 +518,7 @@ def playListMain():
           fh = open(playListFile, 'r')
           for line in fh:
             pl=line[line.find("###PLAYLIST###=")+15:]
-            pl=pl[:pl.find("###END###")]
+            pl=pl[:pl.find("###")]
             if pl.find(";")>=0:
               pl=pl[:pl.find(";")]
             if not pl in playlists:
@@ -428,19 +535,19 @@ def playListMain():
             titleNew=pl;
             if lastContentType!="":
               titleNew=pl.replace(lastContentType+": ","")
-            if os.path.exists(playListCats):
-              fh = open(playListCats, 'r')
+            if os.path.exists(playListSubNames):
+              fh = open(playListSubNames, 'r')
               content=fh.read()
               fh.close()
               if content.find(pl)>=0:
-                addDir(titleNew,pl,'showPlayListCats',"")
+                addDir(titleNew,pl,'showSubfolders',"")
               else:
                 addDir(titleNew,pl,'showPlaylist',"")
             else:
               addDir(titleNew,pl,'showPlaylist',"")
         xbmcplugin.endOfDirectory(pluginhandle)
 
-def showPlayListCats(playlist):
+def showSubfolders(playlist):
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_LABEL)
         cats=[]
         fh = open(playListFile, 'r')
@@ -452,7 +559,7 @@ def showPlayListCats(playlist):
               cats.append(pl)
         fh.close()
         for cat in cats:
-          addDir(cat,playlist+";"+cat,'showPlaylist',"")
+          addSubDir(cat,playlist+";"+cat,'showPlaylist',"")
         showPlaylist(playlist)
         xbmcplugin.endOfDirectory(pluginhandle)
 
@@ -462,7 +569,7 @@ def showPlaylist(playlist):
         all_lines = fh.readlines()
         for line in all_lines:
           pl=line[line.find("###PLAYLIST###=")+15:]
-          pl=pl[:pl.find("###END###")]
+          pl=pl[:pl.find("###")]
           url=line[line.find("###URL###=")+10:]
           url=url[:url.find("###")]
           fanart=line[line.find("###FANART###=")+13:]
@@ -473,24 +580,46 @@ def showPlaylist(playlist):
           director=director[:director.find("###")]
           genre=line[line.find("###GENRE###=")+12:]
           genre=genre[:genre.find("###")]
-          rating=line[line.find("###RATING###=")+11:]
+          rating=line[line.find("###RATING###=")+13:]
           rating=rating[:rating.find("###")]
           year=line[line.find("###YEAR###=")+11:]
           year=year[:year.find("###")]
           runtime=line[line.find("###RUNTIME###=")+14:]
           runtime=runtime[:runtime.find("###")]
           title=line[line.find("###TITLE###=")+12:]
-          date=translation(30012)+": "+title[:title.find(":::")]
-          title=title[title.find(":::")+3:title.find("###URL###")]
+          title=title[:title.find("###")]
+          isDir=line[line.find("###ISDIR###=")+12:]
+          isDir=isDir[:isDir.find("###")]  
+          thumb=line[line.find("###THUMB###=")+12:]
+          thumb=thumb[:thumb.find("###")]
+          date=line[line.find("###DATE###=")+11:]
+          date=date[:date.find("###")]
+          cast=line[line.find("###CAST###=")+11:]
+          cast=cast[:cast.find("###")]
+          writer=line[line.find("###WRITER###=")+13:]
+          writer=writer[:writer.find("###")]
+          studio=line[line.find("###STUDIO###=")+13:]
+          studio=studio[:studio.find("###")]
+          country=line[line.find("###COUNTRY###=")+14:]
+          country=country[:country.find("###")]
+          trailer=line[line.find("###TRAILER###=")+14:]
+          trailer=trailer[:trailer.find("###")]
+          castNew=[]
+          spl=cast.split("/")
+          for temp in spl:
+            castNew.append(temp)
           if plot=="":
             plot=date
           if pl==playlist:
-            entry=[title,url,date,pl,fanart,plot,genre,year,runtime,director,rating]
+            entry=[title,url,date,pl,fanart,plot,genre,year,runtime,director,rating,isDir,thumb,castNew,writer,studio,country,trailer]
             allEntrys.append(entry)
         fh.close()
         allEntrys=sorted(allEntrys, key=itemgetter(2), reverse=True)
         for entry in allEntrys:
-          addLink(entry[0],entry[1],'playMediaFromPlaylist',"",entry[5],entry[3],entry[4],entry[6],entry[7],entry[8],entry[9],entry[10])
+          if entry[11]=="True":
+            addLinkDir(entry[0],entry[1],entry[3],entry[12])
+          else:
+            addLink(entry[0],entry[1],'playMediaFromPlaylist',entry[12],entry[5],entry[3],entry[4],entry[6],entry[7],entry[8],entry[9],entry[10],entry[13],entry[14],entry[15],entry[16],entry[17])
         xbmcplugin.endOfDirectory(pluginhandle)
 
 def playMediaFromPlaylist(url):
@@ -508,18 +637,21 @@ def parameters_string_to_dict(parameters):
                     paramDict[paramSplits[0]] = paramSplits[1]
         return paramDict
 
-def addLink(name,url,mode,iconimage,plot,pl,fanart,genre,year,runtime,director,rating):
+def addLink(name,url,mode,iconimage,plot,pl,fanart,genre,year,runtime,director,rating,cast,writer,studio,country,trailer):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
         type="Video"
         if pl.find("Image:")==0:
           type="Image"
+        elif pl.find("Audio:")==0:
+          type="Audio"
         if year!="":
           year=int(year)
-        liz.setInfo( type=type, infoLabels={ "Title": name, "plot": plot, "genre": genre, "year": year, "director": director, "rating": rating, "duration": runtime } )
+        if type=="Video":
+          liz.setInfo( type=type, infoLabels={ "Title": name, "plot": plot, "genre": genre, "year": year, "director": director, "rating": rating, "duration": runtime, "cast": cast, "writer": writer, "studio": studio, "country": country, "trailer": trailer } )
         liz.setProperty('IsPlayable', 'true')
         liz.setProperty('fanart_image', fanart)
-        liz.addContextMenuItems([(translation(30013), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removeFromPlaylist:::'+urllib.quote_plus(name+";;;"+pl)+')')])
+        liz.addContextMenuItems([(translation(30033), 'RunPlugin(plugin://script.simpleplaylists/?mode=rename&url='+urllib.quote_plus(name+";;;"+pl)+')'),(translation(30013), 'RunPlugin(plugin://script.simpleplaylists/?mode=remove&url='+urllib.quote_plus("removeFromPlaylist;;;"+name+";;;"+pl)+')')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
         return ok
 
@@ -528,8 +660,25 @@ def addDir(name,url,mode,iconimage):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
-        liz.addContextMenuItems([(translation(30014), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removePlaylist:::'+urllib.quote_plus(name)+')'),(translation(30015), 'XBMC.RunScript(special://home/addons/'+addonID+'/remove.py,removeAllPlaylists:::'+urllib.quote_plus(name[:name.find(":")])+')'),(translation(30025), 'RunPlugin(plugin://script.simpleplaylists/?mode=managePlaylists)')])
+        liz.addContextMenuItems([(translation(30014), 'RunPlugin(plugin://script.simpleplaylists/?mode=remove&url='+urllib.quote_plus("removePlaylist;;;"+url+";;;")+')'),(translation(30015), 'RunPlugin(plugin://script.simpleplaylists/?mode=remove&url='+urllib.quote_plus("removeAllPlaylists;;;"+url[:url.find(":")]+";;;")+')'),(translation(30025), 'RunPlugin(plugin://script.simpleplaylists/?mode=managePlaylists)')])
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
+        return ok
+
+def addSubDir(name,url,mode,iconimage):
+        u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)
+        ok=True
+        liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
+        liz.setInfo( type="Video", infoLabels={ "Title": name } )
+        liz.addContextMenuItems([(translation(30034), 'RunPlugin(plugin://script.simpleplaylists/?mode=remove&url='+urllib.quote_plus("removePlaylist;;;"+url+";;;")+')'),(translation(30035), 'RunPlugin(plugin://script.simpleplaylists/?mode=managePlaylists)')])
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
+        return ok
+
+def addLinkDir(name,url,pl,thumb):
+        ok=True
+        liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=thumb)
+        liz.setInfo( type="Video", infoLabels={ "Title": name } )
+        liz.addContextMenuItems([(translation(30033), 'RunPlugin(plugin://script.simpleplaylists/?mode=rename&url='+urllib.quote_plus(name+";;;"+pl)+')'),(translation(30013), 'RunPlugin(plugin://script.simpleplaylists/?mode=remove&url='+urllib.quote_plus("removeFromPlaylist;;;"+name+";;;"+pl)+')')])
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz,isFolder=True)
         return ok
 
 params=parameters_string_to_dict(sys.argv[2])
@@ -542,15 +691,21 @@ if mode == 'addCurrentUrl':
     addCurrentUrl()
 elif mode == 'showPlaylists':
     showPlaylists()
-elif mode == 'showAllPlaylists':
-    showAllPlaylists()
 elif mode == 'showPlaylist':
     showPlaylist(url)
-elif mode == 'showPlayListCats':
-    showPlayListCats(url)
+elif mode == 'showSubfolders':
+    showSubfolders(url)
 elif mode == 'playMediaFromPlaylist':
     playMediaFromPlaylist(url)
 elif mode == 'managePlaylists':
     managePlaylists()
+elif mode == 'playListMain':
+    playListMain()
+elif mode == 'selectMode':
+    selectMode()
+elif mode == 'remove':
+    remove(url)
+elif mode == 'rename':
+    rename(url)
 else:
     playListMain()

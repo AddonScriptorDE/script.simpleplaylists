@@ -36,10 +36,17 @@
 1.0.8
 - Changed type of accessing db infos when adding selected items
 - Changed type of playlist definitions/management
-- Added parameter for content-type overview
+- Added parameter for viewing playlists with content-type overview
 - Added context menu for managing playlists/subfolders
-- Added automatic content detection
+- Added automatic content detection when adding selected items
 - Added playlist subfolders
 - Fixed bug when removing playlist entries
 - Some small other fixes
 - Changed addon id
+
+1.0.9
+- Added support for adding full albums (via json), full tv-shows and directories
+- Changed/added parts of the playlist/subfolder navigation
+- Added context menu for renaming playlist items
+- Added some more db infos
+- Fixed some bugs

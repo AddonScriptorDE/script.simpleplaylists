@@ -10,8 +10,8 @@
   <string id="30011">Show Keyboard to edit title</string>
   <string id="30012">Added on</string>
   <string id="30013">Remove from playlist</string>
-  <string id="30014">Remove playlist</string>
-  <string id="30015">Remove all playlists</string>
+  <string id="30014">Empty playlist</string>
+  <string id="30015">Empty all playlists</string>
   <string id="30016">Already exists in playlist</string>
   <string id="30017">New Playlist</string>
   <string id="30019">New Subfolder</string>
@@ -27,4 +27,8 @@
   <string id="30029">Subfolders in</string>
   <string id="30030">Added item</string>
   <string id="30031">Show confirmation when adding items</string>
+  <string id="30032">Show playlists</string>
+  <string id="30033">Rename item</string>
+  <string id="30034">Empty subfolder</string>
+  <string id="30035">Manage subfolders</string>
 </strings>
